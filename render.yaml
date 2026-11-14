@@ -13,6 +13,9 @@ services:
     plan: free
     region: frankfurt
     maxmemoryPolicy: allkeys-lru
+    ipAllowList:
+      - source: 0.0.0.0/0
+        description: web service
 
   - type: web
     name: hmc-observability

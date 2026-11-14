@@ -1,0 +1,39 @@
+# One paid web service. Render Postgres cannot load TimescaleDB, and the
+# live demo needs Postgres, Redis, Loki, Grafana, and the API in one place.
+# Standard is 2 GB. The quick demo profile fits there; the 100-tenant profile does not.
+services:
+  - type: web
+    name: hmc-observability
+    runtime: docker
+    plan: standard
+    region: frankfurt
+    dockerfilePath: ./infrastructure/render/Dockerfile
+    dockerContext: .
+    healthCheckPath: /health/live
+    disk:
+      name: hmc-data
+      mountPath: /data
+      sizeGB: 10
+    envVars:
+      - key: APP_ENV
+        value: demo
+      - key: RUN_MIGRATIONS
+        value: "1"
+      - key: DEMO_PROFILE
+        value: quick
+      - key: DEMO_RANDOM_SEED
+        value: "42"
+      - key: DEMO_ADMIN_EMAIL
+        value: admin@hmc.local
+      - key: DEMO_ADMIN_PASSWORD
+        sync: false
+      - key: POSTGRES_PASSWORD
+        generateValue: true
+      - key: SECRET_KEY
+        generateValue: true
+      - key: GRAFANA_ADMIN_USER
+        value: admin
+      - key: GRAFANA_ADMIN_PASSWORD
+        generateValue: true
+      - key: COOKIE_SECURE
+        value: "true"

@@ -1,0 +1,34 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    platform: hmc-observability
+
+rule_files:
+  - /etc/prometheus/alerts.yml
+
+scrape_configs:
+  - job_name: hmc-api
+    metrics_path: /metrics
+    static_configs:
+      - targets: ["api:8000"]
+        labels:
+          service: api
+
+  - job_name: hmc-worker
+    metrics_path: /metrics
+    static_configs:
+      - targets: ["worker:8001"]
+        labels:
+          service: worker
+
+  - job_name: hmc-scheduler
+    metrics_path: /metrics
+    static_configs:
+      - targets: ["scheduler:8002"]
+        labels:
+          service: scheduler
+
+  - job_name: prometheus
+    static_configs:
+      - targets: ["localhost:9090"]

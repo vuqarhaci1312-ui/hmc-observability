@@ -1,0 +1,40 @@
+// Grafana Alloy example for a future Linux host.
+// Logs are forwarded to the authenticated HMC ingest adapter.
+// The API token selects the tenant. Do not send X-Scope-OrgID.
+// Host metrics are collected by scripts/hmc_agent.py and posted to
+// POST /api/v1/ingest/metrics. Prometheus remote_write is not the ingestion path.
+
+logging {
+  level  = "info"
+  format = "logfmt"
+}
+
+local.file_match "varlogs" {
+  path_targets = [{
+    __path__ = "/var/log/*.log",
+    job      = "varlogs",
+  }]
+}
+
+loki.source.file "varlogs" {
+  targets    = local.file_match.varlogs.targets
+  forward_to = [loki.write.hmc.receiver]
+}
+
+loki.write "hmc" {
+  endpoint {
+    url = "http://REPLACE_HMC_HOST/api/v1/ingest/loki/push"
+    headers = {
+      "Authorization" = "Bearer ${HMC_API_TOKEN}",
+    }
+  }
+}
+
+prometheus.exporter.unix "node" {
+}
+
+prometheus.scrape "node" {
+  targets         = prometheus.exporter.unix.node.targets
+  forward_to      = []
+  scrape_interval = "30s"
+}

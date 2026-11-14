@@ -1,4 +1,5 @@
 from functools import lru_cache
+from urllib.parse import parse_qsl, urlencode, urlparse, urlunparse
 
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -39,12 +40,35 @@ class Settings(BaseSettings):
         return [item.strip() for item in self.cors_origins.split(",") if item.strip()]
 
     @property
+    def async_database_url(self) -> str:
+        return _normalize_database_url(self.database_url, driver="asyncpg")
+
+    @property
     def sync_database_url(self) -> str:
-        return self.database_url.replace("+asyncpg", "+psycopg")
+        return _normalize_database_url(self.database_url, driver="psycopg")
+
+    @property
+    def database_requires_ssl(self) -> bool:
+        host = urlparse(self.async_database_url).hostname or ""
+        return host.endswith(".render.com")
 
     @property
     def is_production(self) -> bool:
         return self.app_env.lower() == "production"
+
+
+def _normalize_database_url(url: str, driver: str) -> str:
+    if url.startswith("postgres://"):
+        url = "postgresql://" + url[len("postgres://") :]
+    if "+asyncpg" in url or "+psycopg" in url:
+        url = url.replace("+asyncpg", "").replace("+psycopg", "")
+    parsed = urlparse(url)
+    query = [(key, value) for key, value in parse_qsl(parsed.query, keep_blank_values=True) if key not in {"ssl", "sslmode"}]
+    host = parsed.hostname or ""
+    if host.endswith(".render.com"):
+        query.append(("sslmode", "require") if driver == "psycopg" else ("ssl", "require"))
+    scheme = f"postgresql+{driver}"
+    return urlunparse(parsed._replace(scheme=scheme, query=urlencode(query)))
 
 
 @lru_cache

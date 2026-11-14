@@ -1,34 +1,57 @@
-# One paid web service. Render Postgres cannot load TimescaleDB, and the
-# live demo needs Postgres, Redis, Loki, Grafana, and the API in one place.
-# Standard is 2 GB. The quick demo profile fits there; the 100-tenant profile does not.
+# Free Render resources only. Plain Postgres stands in for TimescaleDB.
+# The free database holds the small demo profile, not the 100-tenant wall.
+databases:
+  - name: hmc-db
+    plan: free
+    region: frankfurt
+    databaseName: hmc
+    user: hmc
+
 services:
+  - type: keyvalue
+    name: hmc-redis
+    plan: free
+    region: frankfurt
+    maxmemoryPolicy: allkeys-lru
+
   - type: web
     name: hmc-observability
     runtime: docker
-    plan: standard
+    plan: free
     region: frankfurt
     dockerfilePath: ./infrastructure/render/Dockerfile
     dockerContext: .
     healthCheckPath: /health/live
-    disk:
-      name: hmc-data
-      mountPath: /data
-      sizeGB: 10
     envVars:
       - key: APP_ENV
         value: demo
       - key: RUN_MIGRATIONS
         value: "1"
       - key: DEMO_PROFILE
-        value: quick
+        value: free
       - key: DEMO_RANDOM_SEED
         value: "42"
       - key: DEMO_ADMIN_EMAIL
         value: admin@hmc.local
       - key: DEMO_ADMIN_PASSWORD
         sync: false
-      - key: POSTGRES_PASSWORD
-        generateValue: true
+      - key: DATABASE_URL
+        fromDatabase:
+          name: hmc-db
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          name: hmc-redis
+          type: keyvalue
+          property: connectionString
+      - key: LOKI_URL
+        value: disabled
+      - key: GRAFANA_TIMESCALE
+        value: "false"
+      - key: DB_POOL_SIZE
+        value: "2"
+      - key: DB_MAX_OVERFLOW
+        value: "0"
       - key: SECRET_KEY
         generateValue: true
       - key: GRAFANA_ADMIN_USER

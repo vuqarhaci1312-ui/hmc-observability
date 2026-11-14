@@ -25,6 +25,14 @@ PROFILES = {
         "days": 30,
         "batch_size": 5000,
     },
+    "free": {
+        "tenants": 8,
+        "hosts": 16,
+        "logs": 2_000,
+        "metrics": 20_000,
+        "days": 1,
+        "batch_size": 1000,
+    },
     "noc": {
         "tenants": 100,
         "hosts": 400,

@@ -1,3 +1,4 @@
+import os
 from collections.abc import AsyncIterator
 
 from redis.asyncio import Redis
@@ -14,7 +15,14 @@ def get_engine():
     global _engine
     if _engine is None:
         settings = get_settings()
-        _engine = create_async_engine(settings.database_url, pool_size=10, max_overflow=20, pool_pre_ping=True)
+        connect_args = {"ssl": True} if settings.database_requires_ssl else {}
+        _engine = create_async_engine(
+            settings.async_database_url.split("?")[0] if connect_args else settings.async_database_url,
+            pool_size=int(os.environ.get("DB_POOL_SIZE", "5")),
+            max_overflow=int(os.environ.get("DB_MAX_OVERFLOW", "5")),
+            pool_pre_ping=True,
+            connect_args=connect_args,
+        )
     return _engine
 
 

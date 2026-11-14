@@ -110,6 +110,8 @@ async def push_logs(logs: list[dict]) -> int:
     if not logs:
         return 0
     settings = get_settings()
+    if not settings.loki_url or settings.loki_url == "disabled":
+        return 0
     grouped: dict[str, dict[tuple, list]] = {}
     for log in logs:
         tenant = str(log.get("tenant_id") or "platform")

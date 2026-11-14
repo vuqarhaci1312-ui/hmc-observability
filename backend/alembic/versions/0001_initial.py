@@ -23,11 +23,22 @@ AGGREGATES = {
 }
 
 
+def _timescale_available() -> bool:
+    row = op.get_bind().exec_driver_sql(
+        "SELECT EXISTS (SELECT 1 FROM pg_available_extensions WHERE name = 'timescaledb')"
+    ).scalar()
+    return bool(row)
+
+
 def upgrade() -> None:
+    has_timescale = _timescale_available()
     with op.get_context().autocommit_block():
         op.execute("CREATE EXTENSION IF NOT EXISTS pgcrypto")
-        op.execute("CREATE EXTENSION IF NOT EXISTS timescaledb")
+        if has_timescale:
+            op.execute("CREATE EXTENSION IF NOT EXISTS timescaledb")
     Base.metadata.create_all(bind=op.get_bind())
+    if not has_timescale:
+        return
     with op.get_context().autocommit_block():
         op.execute(
             "SELECT create_hypertable('metric_samples', 'timestamp', if_not_exists => TRUE, migrate_data => TRUE)"

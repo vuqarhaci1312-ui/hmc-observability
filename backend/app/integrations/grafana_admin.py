@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+import os
 from urllib.parse import unquote, urlparse
 
 import httpx
@@ -16,7 +17,7 @@ _tenant_orgs: dict[str, int] = {}
 
 
 def _pg() -> dict:
-    raw = get_settings().database_url.replace("postgresql+asyncpg://", "postgresql://").replace("postgresql+psycopg://", "postgresql://")
+    raw = get_settings().sync_database_url.replace("postgresql+psycopg://", "postgresql://").replace("postgresql+asyncpg://", "postgresql://")
     parsed = urlparse(raw)
     return {
         "user": unquote(parsed.username or ""),
@@ -43,7 +44,12 @@ def _timescale_body() -> dict:
         "user": pg["user"],
         "database": pg["database"],
         "isDefault": True,
-        "jsonData": {"sslmode": "disable", "postgresVersion": 1600, "timescaledb": True, "maxOpenConns": 5},
+        "jsonData": {
+            "sslmode": os.environ.get("GRAFANA_SSLMODE", "require" if pg["host"].endswith(".render.com") else "disable"),
+            "postgresVersion": 1600,
+            "timescaledb": os.environ.get("GRAFANA_TIMESCALE", "true").lower() in {"1", "true", "yes"},
+            "maxOpenConns": 5,
+        },
         "secureJsonData": {"password": pg["password"]},
     }
 

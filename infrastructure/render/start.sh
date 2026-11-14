@@ -5,7 +5,8 @@ export PORT="${PORT:-10000}"
 export POSTGRES_USER="${POSTGRES_USER:-hmc}"
 export POSTGRES_DB="${POSTGRES_DB:-hmc}"
 export PGDATA=/data/pg
-export DATABASE_URL="postgresql+asyncpg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@127.0.0.1:5432/${POSTGRES_DB}"
+url_pw=$(python -c "import os, urllib.parse; print(urllib.parse.quote(os.environ['POSTGRES_PASSWORD'], safe=''))")
+export DATABASE_URL="postgresql+asyncpg://${POSTGRES_USER}:${url_pw}@127.0.0.1:5432/${POSTGRES_DB}"
 export REDIS_URL="${REDIS_URL:-redis://127.0.0.1:6379/0}"
 export LOKI_URL="${LOKI_URL:-http://127.0.0.1:3100}"
 export PROMETHEUS_URL="${PROMETHEUS_URL:-http://127.0.0.1:9090}"

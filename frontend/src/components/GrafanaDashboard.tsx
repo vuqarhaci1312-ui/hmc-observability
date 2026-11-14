@@ -25,7 +25,7 @@ export function GrafanaDashboard({ dashboard, tenantId, vars }: { dashboard: str
     orgId: String(session.data.org_id),
     kiosk: "tv",
     theme: "dark",
-    refresh: "5s",
+    refresh: "1m",
   });
   if (range.start) params.set("from", String(Date.parse(range.start)));
   if (range.end) params.set("to", String(Date.parse(range.end)));

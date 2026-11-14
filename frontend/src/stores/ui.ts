@@ -25,7 +25,7 @@ export const useUi = create<UiState>((set) => ({
   user: null,
   theme: "dark",
   mode: "demo",
-  preset: "6h",
+  preset: "15m",
   tenantId: "",
   live: false,
   setToken: (token) => set({ token }),

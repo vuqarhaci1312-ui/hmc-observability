@@ -47,8 +47,10 @@ asyncio.run(main())
 PY
 
 python -m uvicorn app.main:app --host 0.0.0.0 --port 8000 --proxy-headers --forwarded-allow-ips='*' &
-python -m app.workers.runner &
-python -m app.workers.scheduler &
+if [ -z "${SIM_TICK_SECONDS:-}" ]; then
+  python -m app.workers.runner &
+  python -m app.workers.scheduler &
+fi
 
 ready=0
 for _ in $(seq 1 90); do

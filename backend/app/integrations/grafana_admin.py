@@ -48,7 +48,7 @@ def _timescale_body() -> dict:
             "sslmode": os.environ.get("GRAFANA_SSLMODE", "require" if pg["host"].endswith(".render.com") else "disable"),
             "postgresVersion": 1600,
             "timescaledb": os.environ.get("GRAFANA_TIMESCALE", "true").lower() in {"1", "true", "yes"},
-            "maxOpenConns": 5,
+            "maxOpenConns": int(os.environ.get("GRAFANA_MAX_OPEN_CONNS", "5")),
         },
         "secureJsonData": {"password": pg["password"]},
     }

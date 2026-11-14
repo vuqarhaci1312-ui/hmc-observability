@@ -1,4 +1,7 @@
+import asyncio
 import logging
+import os
+from contextlib import asynccontextmanager
 from time import perf_counter
 
 from fastapi import FastAPI, Request, Response
@@ -19,9 +22,41 @@ LATENCY = Histogram("hmc_http_request_duration_seconds", "HTTP latency", ["handl
 logging.basicConfig(level=logging.INFO, format='{"time":"%(asctime)s","level":"%(levelname)s","logger":"%(name)s","message":"%(message)s"}')
 
 
+@asynccontextmanager
+async def lifespan(_app: FastAPI):
+    interval = int(os.environ.get("SIM_TICK_SECONDS", "0") or "0")
+    stop = asyncio.Event()
+    task = None
+    if interval > 0:
+        async def loop() -> None:
+            from app.simulation.live import evaluate_live, simulation_tick
+            from app.workers.consume import drain_once
+
+            tick = 0
+            while not stop.is_set():
+                try:
+                    await simulation_tick()
+                    await drain_once("api", count=10)
+                    if tick % 5 == 0:
+                        await evaluate_live()
+                except Exception:
+                    logging.getLogger(__name__).exception("live tick failed")
+                tick += 1
+                try:
+                    await asyncio.wait_for(stop.wait(), interval)
+                except TimeoutError:
+                    pass
+
+        task = asyncio.create_task(loop())
+    yield
+    stop.set()
+    if task is not None:
+        await task
+
+
 def create_app() -> FastAPI:
     settings = get_settings()
-    app = FastAPI(title=settings.app_name, version="1.0.0", openapi_url="/openapi.json")
+    app = FastAPI(title=settings.app_name, version="1.0.0", openapi_url="/openapi.json", lifespan=lifespan)
     app.add_middleware(CORSMiddleware, allow_origins=settings.cors_origin_list, allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
 
     @app.middleware("http")

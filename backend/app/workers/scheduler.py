@@ -1,5 +1,6 @@
 import asyncio
 import logging
+import os
 
 from app.simulation.live import evaluate_live, simulation_tick
 from app.workers.http_probe import serve
@@ -18,7 +19,7 @@ async def loop() -> None:
         except Exception:
             logger.exception("scheduler iteration failed")
         tick += 1
-        await asyncio.sleep(2)
+        await asyncio.sleep(int(os.environ.get("SIM_TICK_SECONDS", "2")))
 
 
 if __name__ == "__main__":

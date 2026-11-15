@@ -1,0 +1,32 @@
+{
+  "$schema": "https://schema.railpack.com",
+  "provider": "shell",
+  "packages": {
+    "node": "22",
+    "python": "3.12"
+  },
+  "buildAptPackages": [
+    "curl",
+    "ca-certificates",
+    "nginx",
+    "gettext-base",
+    "adduser",
+    "libfontconfig1"
+  ],
+  "steps": {
+    "build": {
+      "commands": ["...", "bash infrastructure/render/railpack-build.sh"]
+    }
+  },
+  "deploy": {
+    "startCommand": "bash /app/start.sh",
+    "aptPackages": [
+      "curl",
+      "ca-certificates",
+      "nginx",
+      "gettext-base",
+      "adduser",
+      "libfontconfig1"
+    ]
+  }
+}

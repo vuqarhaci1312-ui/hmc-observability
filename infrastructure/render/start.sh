@@ -27,7 +27,21 @@ else
   export GRAFANA_SSLMODE=disable
 fi
 
-cd /opt/hmc
+if [ -d /opt/hmc/app ]; then
+  APP_DIR=/opt/hmc
+  RENDER_DIR=/opt/render
+elif [ -d /app/backend/app ]; then
+  APP_DIR=/app/backend
+  RENDER_DIR=/app/infrastructure/render
+  export PATH="/app/.local/grafana/usr/sbin:${PATH:-}"
+  mkdir -p /srv
+  ln -sfn /app/frontend/dist /srv/frontend
+else
+  echo "Application files were not found" >&2
+  exit 1
+fi
+
+cd "${APP_DIR}"
 if [ "${RUN_MIGRATIONS}" = "1" ]; then
   alembic upgrade head
 fi
@@ -88,9 +102,9 @@ export GF_ANALYTICS_REPORTING_ENABLED=false
 mkdir -p /tmp/grafana
 grafana-server --homepath /usr/share/grafana &
 
-python /opt/render/seed_once.py &
+python "${RENDER_DIR}/seed_once.py" &
 
-envsubst '${PORT}' < /opt/render/nginx.conf.template > /etc/nginx/nginx.conf
+envsubst '${PORT}' < "${RENDER_DIR}/nginx.conf.template" > /etc/nginx/nginx.conf
 nginx -t
 nginx -g 'daemon off;' &
 nginx_pid=$!

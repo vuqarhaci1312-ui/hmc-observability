@@ -22,7 +22,7 @@ services:
     runtime: docker
     plan: free
     region: frankfurt
-    dockerfilePath: ./infrastructure/render/Dockerfile
+    dockerfilePath: ./Dockerfile
     dockerContext: .
     healthCheckPath: /health/live
     envVars:

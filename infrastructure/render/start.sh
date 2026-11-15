@@ -33,7 +33,7 @@ if [ -d /opt/hmc/app ]; then
 elif [ -d /app/backend/app ]; then
   APP_DIR=/app/backend
   RENDER_DIR=/app/infrastructure/render
-  export PATH="/app/.local/grafana/usr/sbin:${PATH:-}"
+  export PATH="/app/.venv/bin:/app/.local/grafana/usr/sbin:${PATH:-}"
   mkdir -p /srv
   ln -sfn /app/frontend/dist /srv/frontend
 else

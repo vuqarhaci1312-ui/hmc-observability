@@ -1,9 +1,8 @@
 [build]
-builder = "DOCKERFILE"
-dockerfilePath = "Dockerfile"
+builder = "RAILPACK"
 
 [deploy]
-startCommand = "/opt/render/start.sh"
+startCommand = "bash /app/start.sh"
 healthcheckPath = "/health/live"
 healthcheckTimeout = 300
 restartPolicyType = "ON_FAILURE"

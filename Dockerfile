@@ -30,7 +30,8 @@ RUN pip install --no-cache-dir .
 
 COPY --from=frontend /src/dist /srv/frontend
 COPY infrastructure/render /opt/render
-RUN chmod +x /opt/render/start.sh
+COPY start.sh /app/start.sh
+RUN chmod +x /opt/render/start.sh /app/start.sh
 
 EXPOSE 10000
 CMD ["/opt/render/start.sh"]
